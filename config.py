@@ -1,7 +1,5 @@
 from pathlib import Path
 
-# Pathlib path
-
 # Posix string
 STEAMCMD_PATH = "/home/dormierian/Games/rimworld/SteamCMD/steamcmd.sh"
 
@@ -11,7 +9,6 @@ GITHUB_MODS_PATH = Path("/home/dormierian/Games/rimtag/github_mods")
 LOCAL_MODS_PATH = Path("/home/dormierian/Games/rimtag/local_mods")
 RIMWORLD_DATA_PATH = Path("/home/dormierian/Games/rimworld/Data/")
 
-
 #List of paths
 MOD_SCAN_DIRS = [
         RIMWORLD_DATA_PATH,
@@ -19,3 +16,7 @@ MOD_SCAN_DIRS = [
         LOCAL_MODS_PATH,
         GITHUB_MODS_PATH
     ]
+
+# Mod config
+TIER_THREE_MODS = ["krkr.rocketman", "taranchuk.performanceoptimizer"]
+DLC_NAMES = ["ludeon.ideology","ludeon.anomaly","ludeon.biotech","ludeon.royalty"]

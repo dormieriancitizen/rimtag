@@ -1,4 +1,4 @@
-import logging
+import logging, dbm
 from typing import Any
 
 import asyncio, os
@@ -68,18 +68,36 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
     mods_info: dict[Path, Any] = {}
     mods_tasks = []
 
-    for path in paths:
-        if path in to_update:
-            if path in steam_mods:
-                mod_maker = generate_mod_from_scratch(path, 
-                    mod_steam_info=asyncio.create_task(steam_handler.mod_steam_info(path, steam_source))
-                )
-            else:
-                mod_maker = generate_mod_from_scratch(path)
-        else:
-            mod_maker = generate_mod_from_cache(cache[str(path)])
+    with dbm.open(Path("cache/persitent.dbm"),"c") as db:
+        for path in paths:
+            abs_path = path.absolute().as_posix()
+            if abs_path not in db:
+                db[abs_path] = "{}"
 
-        mods_tasks.append(asyncio.create_task(mod_maker))
+            mod_persistent_info = db[abs_path]
+
+            if path in to_update:
+                if path in steam_mods:
+                    mod_maker = generate_mod_from_scratch(
+                        path, 
+                        mod_steam_info=asyncio.create_task(steam_handler.mod_steam_info(path, steam_source)),
+                        dbm_db = db,
+                        mod_persistent_info=mod_persistent_info
+                    )
+                else:
+                    mod_maker = generate_mod_from_scratch(
+                        path,
+                        dbm_db=db,
+                        mod_persistent_info=mod_persistent_info
+                    )
+            else:
+                mod_maker = generate_mod_from_cache(
+                    cache[str(path)],
+                    dbm_db = db,
+                    mod_persistent_info=mod_persistent_info
+                )
+
+            mods_tasks.append(asyncio.create_task(mod_maker))
 
     mods_info = {mod.path: mod for mod in (await asyncio.gather(*mods_tasks))}
 

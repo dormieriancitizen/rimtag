@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import subprocess
 from typing import Any, Union
@@ -11,6 +12,7 @@ class Mod:
     def __init__(self,
                  path: Path,
                  source: str,
+                 steam_id: str,
                  pid: str,
                  name: str,
                  deps: list[str],
@@ -21,10 +23,13 @@ class Mod:
                  time_updated: float,
                  download_link: str,
                  pfid: str,
-                 filesize: float) -> None:
+                 filesize: float,
+                 dbm_db,
+                 persistent_info: bytes) -> None:
         
         self.path: Path = path
         self.source: str = source
+        self.steam_id: str = steam_id
 
         self.pid: str = pid
         self.name: str = name
@@ -43,11 +48,15 @@ class Mod:
         self.pfid: str = pfid
         self.filesize: float = filesize
 
+        self.db = dbm_db
+        self.persistent: dict = json.loads(persistent_info.decode("utf-8"))
+
     def jsonable(self) -> dict[str,Any]:
         cached = {}
 
         cached["path"] = str(self.path.absolute())
         cached["source"] = self.source
+        cached["steam_id"] = self.steam_id
 
         cached["pid"] = self.pid
         cached["name"] = self.name
@@ -68,30 +77,23 @@ class Mod:
 
         return cached
 
+    def update_persistence(self,key,value):
+        self.db[self.path.absolute().as_posix()][key] = value
+
     def best_supported_version(self) -> str:
         return str(max([float(ver) for ver in self.supported_versions], default="1.5"))
             
-
     def __repr__(self):
         return str(self.jsonable())
 
-async def mod_about(path: Path) -> dict[Any,Any]:
+    def search_visible(self,search_string) -> bool:
+        if search_string.lower() in self.name.lower():
+            return True
+        else:
+            return False
+
+async def mod_about(about_file: Path) -> dict[Any, Any]:
     logger = logging.getLogger()
-
-    about_file = path / "About" / "About.xml"
-
-    if not about_file.exists():
-        about_file = path / "About" / "about.xml"
-
-    if not about_file.exists():
-        logger.critical(f"Could not find about.xml for {str(path)}")
-        raise OSError("No path found")
-
-    # logger.debug(f"Found about.xml at {about_file.absolute()}")
-
-    if not about_file.exists():
-        logger.critical(f"Could not find about.xml for {str(path)}")
-        raise OSError("No path found")
 
     async with async_open(about_file,"rb") as aboutxml:
         try:
@@ -103,7 +105,27 @@ async def mod_about(path: Path) -> dict[Any,Any]:
             logger.error(f"Expat error in "+str(about_file.absolute()))
             return {}
 
-async def generate_mod_from_scratch(path: Path, mod_steam_info=None) -> Mod:
+async def get_mod_about_path(path: Path) -> Path:
+    logger = logging.getLogger()
+
+    about_file = path / "About" / "About.xml"
+
+    if not about_file.exists():
+        about_file = path / "About" / "about.xml"
+
+    if not about_file.exists():
+            logger.critical(f"Could not find about.xml for {str(path)}")
+            raise OSError("No path found")
+
+        # logger.debug(f"Found about.xml at {about_file.absolute()}")
+
+    if not about_file.exists():
+        logger.critical(f"Could not find about.xml for {str(path)}")
+        raise OSError("No path found")
+
+    return about_file
+
+async def generate_mod_from_scratch(path: Path, mod_persistent_info: bytes, dbm_db, mod_steam_info=None,) -> Mod:
     def read_li(about: dict[Any, Any],atr: str) -> list[Union[str,dict]]:
         items: list[Union[str,dict]] = []
         if atr in about:
@@ -119,7 +141,9 @@ async def generate_mod_from_scratch(path: Path, mod_steam_info=None) -> Mod:
             items = []
         return items
     
-    about = await mod_about(path)
+    about_path = await get_mod_about_path(path)
+
+    about = await mod_about(about_path)
 
     if "packageId" in about:
         pid = about["packageId"].lower()  
@@ -139,15 +163,24 @@ async def generate_mod_from_scratch(path: Path, mod_steam_info=None) -> Mod:
     name = about["name"] if "name" in about else pid
     author = about["author"] if "author" in about else ""
 
+    if source == "STEAM":
+        steam_id_path = (about_path.parent / "PublishedFileId.txt")
+        if steam_id_path.exists():
+            steam_id = steam_id_path.read_text()
+        else:
+            steam_id = path.name
+    else:
+        steam_id = "0"
+
     if "url" in about:
         download_link = about["url"]
     elif source=="STEAM":
         download_link = f"https://steamcommunity.com/sharedfiles/filedetails/?id={path.name}"
     elif source=="GIT":
-        subprocess.check_output(["git", "-C",path.as_posix(),"config", "--get", "remote.origin.url"]).decode("utf-8").rstrip()
+        download_link=subprocess.check_output(["git", "-C",path.as_posix(),"config", "--get", "remote.origin.url"]).decode("utf-8").rstrip()
     else:
-        download_link=""
-
+        download_link: str=""
+    
     deps = [dep["packageId"].lower() for dep in read_li(about, "modDependencies")] #type: ignore
     load_before = [dep.lower() for dep in read_li(about, "loadBefore")] # type: ignore
     load_after = [dep.lower() for dep in read_li(about, "loadAfter")] # type: ignore
@@ -174,6 +207,7 @@ async def generate_mod_from_scratch(path: Path, mod_steam_info=None) -> Mod:
     return Mod(
         path=path,
         source=source,
+        steam_id=steam_id,
         pid=pid,
         name=name,
         deps=deps,
@@ -184,12 +218,15 @@ async def generate_mod_from_scratch(path: Path, mod_steam_info=None) -> Mod:
         time_updated=time_updated,
         download_link=download_link,
         pfid=pfid,
-        filesize=filesize
+        filesize=filesize,
+        dbm_db=dbm_db,
+        persistent_info=mod_persistent_info,
     )
 
-async def generate_mod_from_cache(cached: Any) -> Mod:
+async def generate_mod_from_cache(cached: Any, dbm_db, mod_persistent_info: bytes) -> Mod:
     path = Path(cached["path"])
     source = cached["source"]
+    steam_id = cached["steam_id"]
 
     pid = cached["pid"]
     name = cached["name"]
@@ -211,6 +248,7 @@ async def generate_mod_from_cache(cached: Any) -> Mod:
     return Mod(
         path=path,
         source=source,
+        steam_id=steam_id,
         pid=pid,
         name=name,
         deps=deps,
@@ -221,7 +259,9 @@ async def generate_mod_from_cache(cached: Any) -> Mod:
         time_updated=time_updated,
         download_link=download_link,
         pfid=pfid,
-        filesize=filesize
+        filesize=filesize,
+        dbm_db=dbm_db,
+        persistent_info=mod_persistent_info,
     )
 
 def is_steam_mod(path: Path) -> bool:

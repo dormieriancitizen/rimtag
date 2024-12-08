@@ -2,8 +2,7 @@ from pathlib import Path
 import logging
 from mod_manager.mod_handler import Mod
 
-tier_3_mods = ["krkr.rocketman", "taranchuk.performanceoptimizer"]
-dlcs=["ludeon.ideology","ludeon.anomaly","ludeon.biotech","ludeon.royalty"]
+from config import TIER_THREE_MODS, DLC_NAMES
 
 def sorter(mods: dict[Path,Mod]):
     # Convert all loadAfter into loadBefore
@@ -22,22 +21,6 @@ def sorter(mods: dict[Path,Mod]):
             if pid in deps:
                 deps[pid].append(mod.pid)
 
-    # for d in modd:
-    #     # If not otherwise specified, give every mod an orderAfter Core.
-    #     if d not in modd["ludeon.rimworld"]["orderAfter"]:
-    #         if "ludeon.rimworld" not in modd[d]["orderAfter"]:
-    #             if d != "ludeon.rimworld":
-    #                 modd[d]["orderAfter"].append("ludeon.rimworld")
-        
-    #                 # If not otherwise specified, also give every mod an orderAfter all DLCs.
-    #                 dlc_names = ("biotech", "ideology", "royalty", "anomaly")
-    #                 dlc_names = [f"ludeon.rimworld.{dlc_name}" for dlc_name in dlc_names]
-                    
-    #                 if d not in [item for sublist in [modd[dlc_name]["orderAfter"] for dlc_name in dlc_names] for item in sublist]:
-    #                     if not Counter(dlc_names) & Counter(modd[d]["orderAfter"]):
-    #                         if not d.startswith("ludeon.rimworld"):
-    #                             modd[d]["orderAfter"].extend(dlc_names)
-
     for pid in deps:
         if pid in deps["ludeon.rimworld"] or pid.startswith("ludeon."):
             continue
@@ -45,7 +28,7 @@ def sorter(mods: dict[Path,Mod]):
         if "ludeon.rimworld" not in deps[pid]:
             deps[pid].append("ludeon.rimworld")
 
-        for dlc in dlcs:
+        for dlc in DLC_NAMES:
             if dlc in deps:
                 if pid in deps[dlc]:
                     continue
@@ -56,8 +39,8 @@ def sorter(mods: dict[Path,Mod]):
 
         
 
-    load_normal_mods = [pid for pid in deps if pid not in tier_3_mods]
-    for pid in tier_3_mods:
+    load_normal_mods = [pid for pid in deps if pid not in TIER_THREE_MODS]
+    for pid in TIER_THREE_MODS:
         if pid in deps:
             deps[pid].extend(load_normal_mods)
 
@@ -73,6 +56,7 @@ def sorter(mods: dict[Path,Mod]):
     return final_order
 
 def find_circular_dependencies(nodes):
+    # Magic chatgpt code (it works idk)
     def dfs(node, visited, rec_stack, path, cycles):
         visited.add(node)
         rec_stack.add(node)
