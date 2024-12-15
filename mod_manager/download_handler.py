@@ -2,6 +2,7 @@ import asyncio
 import itertools
 import os
 from pathlib import Path
+import time
 from typing import Awaitable
 from urllib.parse import urlparse
 
@@ -122,7 +123,22 @@ async def process_downloads(*args: Awaitable[list[Path]]):
         os.symlink(path,active_path)
         await dds_encode(active_path)
 
-async def update_mods(mods):
+async def update_mods(mods: list[Mod]):
+    to_download_steam = []
+    to_download_github = []
+    
+    for mod in mods:
+        if mod.source == "STEAM":
+            to_download_steam.append(mod.steam_id)
+        elif mod.source == "GITHUB":
+            to_download_github.append(mod.steam_id)
+
+    await process_downloads(steam_download_workshop_ids(to_download_steam))
+
+    for mod in itertools.chain(to_download_github, to_download_steam):
+        mod.update_persistence("download_time",time.time())
+
+async def update(mods):
     steam_mods: dict[str,Mod] = {}
 
     for path, mod in mods.items():
@@ -131,6 +147,16 @@ async def update_mods(mods):
 
     steam_info = await steam_handler.fetch_from_steam(list(steam_mods.keys()))
 
+    to_download = []
+
     for steam_id, mod in steam_mods.items():
-        # if steam_info[steam_id][time_updated]
-        pass
+        if "download_time" in mod.persistent:
+            if float(steam_info[steam_id]["time_updated"]) > float(mod.persistent["download_time"]):
+                to_download.append(mod)
+        else:
+            to_download.append(mod)
+
+    await update_mods(to_download)
+    
+
+    

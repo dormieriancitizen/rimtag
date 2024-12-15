@@ -51,6 +51,9 @@ class Mod:
         self.db = dbm_db
         self.persistent: dict = json.loads(persistent_info.decode("utf-8"))
 
+        if "download_time" not in self.persistent:
+            self.update_persistence("download_time",time.time())
+
     def jsonable(self) -> dict[str,Any]:
         cached = {}
 
@@ -78,7 +81,8 @@ class Mod:
         return cached
 
     def update_persistence(self,key,value):
-        self.db[self.path.absolute().as_posix()][key] = value
+        self.persistent[key] = value
+        self.db[self.path.absolute().as_posix()] = json.dumps(self.persistent)
 
     def best_supported_version(self) -> str:
         return str(max([float(ver) for ver in self.supported_versions], default="1.5"))

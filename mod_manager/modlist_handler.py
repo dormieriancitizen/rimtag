@@ -40,3 +40,16 @@ def link_mods(mods: list[Mod]) -> None:
     for mod in mods:
         if mod.source != "LUDEON":
             os.symlink(src=mod.path,dst=mods_folder / mod.path.name)
+
+def merge_tags(include: list[list[Path]], exclude: list[list[Path]]) -> list[Path]:
+    modlist: set[Path] = set()
+
+    for tag in include:
+        modlist.update(tag)
+
+    for tag in exclude:
+        for path in tag:
+            if path in modlist:
+                modlist.discard(path)
+
+    return list(modlist)

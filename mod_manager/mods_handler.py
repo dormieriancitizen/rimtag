@@ -68,39 +68,41 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
     mods_info: dict[Path, Any] = {}
     mods_tasks = []
 
-    with dbm.open(Path("cache/persitent.dbm"),"c") as db:
-        for path in paths:
-            abs_path = path.absolute().as_posix()
-            if abs_path not in db:
-                db[abs_path] = "{}"
+    # Not closing bc I'll bneed this later
+    db =  dbm.open(Path("cache/persistent.dbm"),"c")
 
-            mod_persistent_info = db[abs_path]
+    for path in paths:
+        abs_path = path.absolute().as_posix()
+        if abs_path not in db:
+            db[abs_path] = "{}"
 
-            if path in to_update:
-                if path in steam_mods:
-                    mod_maker = generate_mod_from_scratch(
-                        path, 
-                        mod_steam_info=asyncio.create_task(steam_handler.mod_steam_info(path, steam_source)),
-                        dbm_db = db,
-                        mod_persistent_info=mod_persistent_info
-                    )
-                else:
-                    mod_maker = generate_mod_from_scratch(
-                        path,
-                        dbm_db=db,
-                        mod_persistent_info=mod_persistent_info
-                    )
-            else:
-                mod_maker = generate_mod_from_cache(
-                    cache[str(path)],
+        mod_persistent_info = db[abs_path]
+
+        if path in to_update:
+            if path in steam_mods:
+                mod_maker = generate_mod_from_scratch(
+                    path, 
+                    mod_steam_info=asyncio.create_task(steam_handler.mod_steam_info(path, steam_source)),
                     dbm_db = db,
                     mod_persistent_info=mod_persistent_info
                 )
+            else:
+                mod_maker = generate_mod_from_scratch(
+                    path,
+                    dbm_db=db,
+                    mod_persistent_info=mod_persistent_info
+                )
+        else:
+            mod_maker = generate_mod_from_cache(
+                cache[str(path)],
+                dbm_db = db,
+                mod_persistent_info=mod_persistent_info
+            )
 
-            mods_tasks.append(asyncio.create_task(mod_maker))
+        mods_tasks.append(asyncio.create_task(mod_maker))
 
     mods_info = {mod.path: mod for mod in (await asyncio.gather(*mods_tasks))}
 
     await update_json_cache(cache_file,jsonable_mods_info(mods_info))
-    
+
     return mods_info
