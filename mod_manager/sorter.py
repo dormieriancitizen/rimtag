@@ -1,15 +1,24 @@
 from pathlib import Path
 import logging
+from itertools import chain
+
 from mod_manager.mod_handler import Mod
 
 from config import TIER_THREE_MODS, DLC_NAMES
 
-def sorter(mods: dict[Path,Mod]):
+def modsort(mods: dict[Path,Mod]) -> list[str]:
     # Convert all loadAfter into loadBefore
+    logger = logging.getLogger()
+
 
     deps: dict[str,list[str]] = {
         mod.pid: [] for _, mod in mods.items() if mod
     }
+
+    for mod in mods.values():
+        for dependency in mod.deps:
+            if dependency not in deps:
+                logger.warning(f"Mod {mod.name} missing dependency {dependency}")
 
     for _, mod in mods.items():
         # Invert the load_befores
@@ -20,8 +29,9 @@ def sorter(mods: dict[Path,Mod]):
         for pid in mod.load_before:
             if pid in deps:
                 deps[pid].append(mod.pid)
-
+    
     for pid in deps:
+        # Make sure all mods load before rimworld, that don't specify otherwise
         if pid in deps["ludeon.rimworld"] or pid.startswith("ludeon."):
             continue
 
@@ -46,14 +56,14 @@ def sorter(mods: dict[Path,Mod]):
 
     order = sort_mod_list(deps)
 
-    pids_by_path = {mods[path].pid: path for path in mods}
+    # pids_by_path = {mods[path].pid: path for path in mods}
 
-    final_order = {
-        pids_by_path[pid]: mods[pids_by_path[pid]]
-        for pid in order
-    }
+    # final_order = {
+    #     pids_by_path[pid]: mods[pids_by_path[pid]]
+    #     for pid in order
+    # }
 
-    return final_order
+    return order
 
 def find_circular_dependencies(nodes):
     # Magic chatgpt code (it works idk)

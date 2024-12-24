@@ -1,5 +1,5 @@
+import asyncio
 import logging, os
-import gui.gui as gui
 
 logging.basicConfig(
     level=logging.DEBUG, format='%(levelname)s: %(message)s'
@@ -7,19 +7,18 @@ logging.basicConfig(
 
 logging.getLogger('asyncio').setLevel(logging.WARNING) # Suppress epoll
 
-from config import MOD_SCAN_DIRS
-# import temp
+import asyncclick as click
 
-def main():
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    
-    w = gui.MainWindow()
-    w.show()
+from cli import modlist, tags
 
-    gui.app.exec()
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
-    # asyncio.run(temp.main())
+@click.group()
+async def cli():
+    pass
 
+cli.add_command(modlist.modlist)
+cli.add_command(tags.tags)
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    asyncio.run(cli())

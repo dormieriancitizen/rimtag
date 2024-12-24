@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import logging
 
 from mod_manager.mod_handler import Mod
-import steam_handler
+from mod_manager import steam_handler
 from config import WORKSHOP_PATH, STEAMCMD_PATH, GITHUB_MODS_PATH
 
 todds_command = [
