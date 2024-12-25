@@ -1,12 +1,16 @@
 from ast import Mod
+from enum import unique
+import itertools
 import logging, os
 
 from pathlib import Path
 from typing import Iterable
+from mod_manager import mods_handler
 from mod_manager.mod_handler import Mod
 
-from config import RIMWORLD_GAME_PATH
-from mod_manager.sorter import modsort
+from colorama import Style,Fore,Back
+
+from config import RIMWORLD_GAME_PATH, FRAMEWORK_MODS, DLC_NAMES
 
 logger: logging.Logger = logging.getLogger()
 
@@ -57,6 +61,46 @@ def merge_tags(include: Iterable[list[Path]], exclude: Iterable[list[Path]]) -> 
 
     return list(modlist)
 
+async def validate_tags(mod_data: dict[Path,Mod]) -> None:
+    def find_dupes(input: Iterable):
+        unique = set()
+        dupes = []
+
+        for x in input:
+            if x in unique:
+                dupes.append(x)
+            else:
+                unique.add(x)
+
+        return dupes, unique
+
+    logger = logging.getLogger()
+
+    for tag_file in [f for f in Path("cache/tags").iterdir() if f.is_file()]:
+        logger.info(f"Validating tag {Fore.RED}{tag_file.name}{Style.RESET_ALL}")
+
+        tag_paths = [Path(posix) for posix in tag_file.read_text().split("\n")]
+
+        dupes, unique = find_dupes(tag_paths)
+
+        if dupes:
+            for dupe in dupes:
+                logger.info(f"Found duplicate: {dupe}. Removing from tag")
+
+            tag_file.write_text("\n".join([path.absolute().as_posix() for path in unique]))
+
+
+        tag_mods: dict[Path,Mod] = {path: mod_data[path] for path in tag_paths}
+        tag_pids = set(mod.pid for mod in tag_mods.values())
+
+        for mod in tag_mods.values():
+            for dependency in mod.deps:
+                if dependency not in itertools.chain(FRAMEWORK_MODS):
+                    if dependency not in tag_pids:
+                        logger.info(f"Mod {Fore.BLUE}{mod.name}{Style.RESET_ALL} missing dependency {Fore.GREEN}{dependency}{Style.RESET_ALL}")
+                
+
+
 async def get_instance_mods(mod_data: dict[Path,Mod],instance_name: str) -> dict[Path,Mod]:
     instance_tags = Path(f"cache/instances/{instance_name}").read_text().splitlines()
 
@@ -68,8 +112,8 @@ async def get_instance_mods(mod_data: dict[Path,Mod],instance_name: str) -> dict
         exclude = []
 
     modlist = merge_tags(
-        include=(get_tag_info(tag) for tag in include),
-        exclude=(get_tag_info(tag) for tag in exclude)
+        include=(get_tag_info(tag.lstrip()) for tag in include),
+        exclude=(get_tag_info(tag.lstrip()) for tag in exclude)
     )
 
     mod_data = {path: mod for path, mod in mod_data.items() if path in modlist}

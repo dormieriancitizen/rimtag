@@ -15,10 +15,12 @@ def modsort(mods: dict[Path,Mod]) -> list[str]:
         mod.pid: [] for _, mod in mods.items() if mod
     }
 
-    for mod in mods.values():
+    for path, mod in mods.copy().items():
         for dependency in mod.deps:
             if dependency not in deps:
-                logger.warning(f"Mod {mod.name} missing dependency {dependency}")
+                logger.warning(f"Mod {mod.name} missing dependency {dependency}, removing from list")
+                del deps[mod.pid]
+                del mods[path]
 
     for _, mod in mods.items():
         # Invert the load_befores

@@ -7,6 +7,7 @@ import asyncclick as click
 from config import MOD_SCAN_DIRS
 from mod_manager import mods_handler
 
+from mod_manager import modlist_handler
 from mod_manager.modlist_handler import get_tag_info
 from cli.interface import select_or_create
 
@@ -22,13 +23,21 @@ async def show_tag_info(tag_name):
     if tag_name:
         tag_name = tag_name[0]
     else:
-        tag_name = (await select_or_create(Path("cache/tags/")))
+        tag_name = (await select_or_create(Path("cache/tags/"),"tag"))
+
+    if not tag_name:
+        return
 
     tag_info = get_tag_info(tag_name)
 
     print("\n".join((
         mods_info[mod_path].name for mod_path in tag_info
     )))
+
+@tags.command("validate")
+async def validate_tags():
+    mods_data = await mods_handler.get_mods_info(MOD_SCAN_DIRS)
+    await modlist_handler.validate_tags(mods_data)
 
 @tags.command("edit")
 @click.argument("tag_name",nargs = -1)
@@ -38,7 +47,10 @@ async def edit_tag(tag_name):
     if tag_name:
         tag_name = tag_name[0]
     else:
-        tag_name = (await select_or_create(Path("cache/tags/")))
+        tag_name = (await select_or_create(Path("cache/tags/"),"tag"))
+
+    if not tag_name:
+        return
 
     tag_info = get_tag_info(tag_name)
 

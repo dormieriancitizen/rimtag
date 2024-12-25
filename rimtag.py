@@ -7,9 +7,12 @@ logging.basicConfig(
 
 logging.getLogger('asyncio').setLevel(logging.WARNING) # Suppress epoll
 
+from colorama import init
+init()
+
 import asyncclick as click
 
-from cli import modlist, tags
+from cli import modlist, tags, encode
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -19,6 +22,7 @@ async def cli():
 
 cli.add_command(modlist.modlist)
 cli.add_command(tags.tags)
+cli.add_command(encode.encode)
 
 if __name__ == '__main__':
     asyncio.run(cli())

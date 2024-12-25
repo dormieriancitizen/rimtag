@@ -23,4 +23,9 @@ MOD_SCAN_DIRS = [
 
 # Mod config
 TIER_THREE_MODS = ["krkr.rocketman", "taranchuk.performanceoptimizer"]
-DLC_NAMES = ["ludeon.ideology","ludeon.anomaly","ludeon.biotech","ludeon.royalty"]
+DLC_NAMES = ["ludeon.rimworld.ideology","ludeon.rimworld.anomaly","ludeon.rimworld.biotech","ludeon.rimworld.royalty"]
+FRAMEWORK_MODS = [
+    "ludeon.rimworld", "brrainz.harmony", "oskarpotocki.vanillafactionsexpanded.core",
+    "unlimitedhugs.hugslib", "zetrith.prepatcher", "adaptive.storage.framework",
+    "imranfish.xmlextensions", "nightmare.core"
+    ]
