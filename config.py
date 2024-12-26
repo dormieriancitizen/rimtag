@@ -5,7 +5,7 @@ RIMWORLD_CONFIG_PATH = Path("/home/dormierian/.config/unity3d/Ludeon Studios/Rim
 RIMWORLD_GAME_PATH = Path("/home/dormierian/Games/rimworld")
 
 # Posix string
-STEAMCMD_PATH = "/home/dormierian/Games/rimworld/SteamCMD/steamcmd.sh"
+STEAMCMD_PATH = "steamcmd"
 
 # Places to find mods
 WORKSHOP_PATH = Path("/home/dormierian/.local/share/Steam/steamapps/workshop/content/294100/")

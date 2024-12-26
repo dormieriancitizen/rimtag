@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 
 import logging
 
+from colorama import Fore, Back, Style
+
 from mod_manager.mod_handler import Mod
 from mod_manager import steam_handler
 from config import WORKSHOP_PATH, STEAMCMD_PATH, GITHUB_MODS_PATH
@@ -47,7 +49,7 @@ async def steam_download_workshop_ids(workshop_ids: list[str]) -> list[Path]:
         ]
 
     for id in workshop_ids:
-        command.extend(["workhop_download_item", "294100", id])
+        command.extend(["+workshop_download_item", "294100", id])
     
     command.append("+exit")
 
@@ -135,28 +137,40 @@ async def update_mods(mods: list[Mod]):
 
     await process_downloads(steam_download_workshop_ids(to_download_steam))
 
-    for mod in itertools.chain(to_download_github, to_download_steam):
+    for mod in itertools.chain(mods):
         mod.update_persistence("download_time",time.time())
 
 async def update(mods):
+    logger = logging.getLogger()
+    
     steam_mods: dict[str,Mod] = {}
 
     for path, mod in mods.items():
         if mod.source == "STEAM":
-            steam_mods = {mod.steam_id: mod}
+            steam_mods[mod.steam_id] = mod
 
-    steam_info = await steam_handler.fetch_from_steam(list(steam_mods.keys()))
+    steam_info = await steam_handler.fetch_from_steam(
+        list(steam_mods.keys())
+    )
 
     to_download = []
 
     for steam_id, mod in steam_mods.items():
         if "download_time" in mod.persistent:
-            if float(steam_info[steam_id]["time_updated"]) > float(mod.persistent["download_time"]):
+            if str(steam_id) not in steam_info:
+                continue
+            else:
+                mod_steam_info = steam_info[str(steam_id)]
+        
+            if "time_updated" not in mod_steam_info:
+                logger.warning(f"Mod {mod.name} ({steam_id}) does not have update time")
+                continue
+        
+            if float(mod_steam_info["time_updated"]) > float(mod.persistent["download_time"]):
                 to_download.append(mod)
         else:
             to_download.append(mod)
-
-    await update_mods(to_download)
     
-
+    logger.info("\n".join(f"{Fore.BLUE}{mod.name}{Style.RESET_ALL}" for mod in to_download))
+    await update_mods(to_download)
     

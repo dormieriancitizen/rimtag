@@ -13,11 +13,6 @@ from mod_manager import rentry
 
 import cli.interface as interface
 
-@click.command("update")
-async def update():
-    mods = mods_handler.get_mods_info(MOD_SCAN_DIRS)
-    await download_handler.update(mods)
-
 @click.group("instance")
 async def modlist():
     pass

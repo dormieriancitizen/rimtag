@@ -29,7 +29,7 @@ class Mod:
         
         self.path: Path = path
         self.source: str = source
-        self.steam_id: str = steam_id
+        self.steam_id: str = self.path.name
 
         self.pid: str = pid
         self.name: str = name

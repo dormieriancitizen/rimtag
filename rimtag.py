@@ -12,7 +12,7 @@ init()
 
 import asyncclick as click
 
-from cli import modlist, tags, encode
+from cli import modlist, tags, mods
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
@@ -22,7 +22,7 @@ async def cli():
 
 cli.add_command(modlist.modlist)
 cli.add_command(tags.tags)
-cli.add_command(encode.encode)
+cli.add_command(mods.cli_mods)
 
 if __name__ == '__main__':
     asyncio.run(cli())
