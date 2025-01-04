@@ -18,8 +18,10 @@ async def modlist():
     pass
 
 @modlist.command("list")
-async def make_modlist():
-    modlist_name = await interface.prompt_instance_name()
+@click.argument("modlist_name",default=None)
+async def make_modlist(modlist_name):
+    if not modlist_name:
+        modlist_name = await interface.prompt_instance_name()
 
     if not modlist_name:
         return
@@ -37,10 +39,10 @@ async def make_modlist():
     modlist_handler.link_mods(list(mod_data.values())) # t
 
 @modlist.command("rentry")
-async def upload_rentry():
-    modlist_name = await interface.prompt_instance_name()
-
-
+@click.argument("modlist_name",default=None)
+async def upload_rentry(modlist_name):
+    if not modlist_name:
+        modlist_name = await interface.prompt_instance_name()
     if not modlist_name:
         return
 
@@ -90,8 +92,6 @@ async def compare_modlists():
         if tag_name:
             with open(Path("cache/tags") / tag_name, "a") as tag_file:
                 tag_file.write("\n"+mod.path.absolute().as_posix())
-
-
 
 @modlist.command("set_tags")
 async def _set_tags():

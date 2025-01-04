@@ -3,7 +3,7 @@ import itertools
 import os
 from pathlib import Path
 import time
-from typing import Awaitable
+from typing import Awaitable, Iterable
 from urllib.parse import urlparse
 
 import logging
@@ -43,7 +43,7 @@ async def command_run(cmd: list[str]) -> int | None:
     return proc.returncode
 
 
-async def steam_download_workshop_ids(workshop_ids: list[str]) -> list[Path]:
+async def steam_download_workshop_ids(workshop_ids: Iterable[str]) -> list[Path]:
     command = [STEAMCMD_PATH,
             "+logon", "anonymous",
         ]

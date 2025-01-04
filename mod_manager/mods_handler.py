@@ -1,4 +1,5 @@
 import logging, dbm
+import time
 from typing import Any
 
 import asyncio, os
@@ -31,6 +32,8 @@ async def get_mods_info(scandirs: list[Path]) -> dict[Path, Mod]:
 
 async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
     logger = logging.getLogger()
+    start_time = time.time()
+
 
     cache_file = Path("cache/mods_info.json")
 
@@ -53,7 +56,6 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
         if path.stat().st_mtime > cache[str(path.absolute())]["time_updated"]:
             to_update.append(path)
             continue
-
 
     if True:
         for path in to_update:
@@ -103,6 +105,8 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
 
     mods_info = {mod.path: mod for mod in (await asyncio.gather(*mods_tasks))}
 
-    await update_json_cache(cache_file,jsonable_mods_info(mods_info))
+    asyncio.create_task(update_json_cache(cache_file,jsonable_mods_info(mods_info)))
+
+    logger.info(f"Finished processing mod metadata in {time.time()-start_time}. {len(to_update)}/{len(paths)} updated.")
 
     return mods_info
