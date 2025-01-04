@@ -34,7 +34,6 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
     logger = logging.getLogger()
     start_time = time.time()
 
-
     cache_file = Path("cache/mods_info.json")
 
     if cache_file.exists():
@@ -57,10 +56,12 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
             to_update.append(path)
             continue
 
+    # Todo: replace this with a flag
     if True:
         for path in to_update:
             if is_steam_mod(path):
                 steam_mods.append(path)
+        
         if steam_mods:
             steam_source = asyncio.create_task(steam_handler.fetch_from_steam([path.name for path in steam_mods]))
     else:
