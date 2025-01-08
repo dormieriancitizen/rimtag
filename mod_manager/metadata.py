@@ -9,7 +9,7 @@ from mod_manager.cache import update_json_cache
 
 # import mod_manager.mod_handler as mod_handler
 
-from mod_manager.mod_handler import Mod, generate_mod_from_cache, generate_mod_from_scratch, is_steam_mod
+from mod_manager.mod import Mod, generate_mod_from_cache, generate_mod_from_scratch, is_steam_mod
 
 from pathlib import Path
 import json

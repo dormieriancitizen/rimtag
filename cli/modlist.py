@@ -5,9 +5,9 @@ from colorama import Fore, Style, Back
 
 from config import MOD_SCAN_DIRS, RIMWORLD_CONFIG_PATH
 
-from mod_manager import download_handler, mods_handler
-from mod_manager import modlist_handler
-from mod_manager.modlist_handler import merge_tags, get_tag_info, make_modconfig_file, get_instance_mods
+from mod_manager import download, metadata
+from mod_manager import instance
+from mod_manager.instance import merge_tags, get_tag_info, make_modconfig_file, get_instance_mods
 from mod_manager.sorter import modsort
 from mod_manager import rentry
 
@@ -27,7 +27,7 @@ async def make_modlist(modlist_name):
         return
 
     mod_data = await get_instance_mods(
-        (await mods_handler.get_mods_info(MOD_SCAN_DIRS)),
+        (await metadata.get_mods_info(MOD_SCAN_DIRS)),
         modlist_name
     )
     
@@ -36,7 +36,7 @@ async def make_modlist(modlist_name):
     with open(RIMWORLD_CONFIG_PATH / "Config/ModsConfig.xml","w") as modsconfig_file:
         modsconfig_file.write(make_modconfig_file(sort_order))
 
-    modlist_handler.link_mods(list(mod_data.values())) # t
+    instance.link_mods(list(mod_data.values())) # t
 
 @modlist.command("rentry")
 @click.argument("modlist_name",default=None)
@@ -47,7 +47,7 @@ async def upload_rentry(modlist_name):
         return
 
     mod_data = await get_instance_mods(
-        (await mods_handler.get_mods_info(MOD_SCAN_DIRS)),
+        (await metadata.get_mods_info(MOD_SCAN_DIRS)),
         modlist_name
     )
 
@@ -68,7 +68,7 @@ async def compare_modlists():
     if not modlist_name:
         return
 
-    mod_data = await mods_handler.get_mods_info(MOD_SCAN_DIRS)
+    mod_data = await metadata.get_mods_info(MOD_SCAN_DIRS)
 
     instance_mod_data = await get_instance_mods(
         mod_data,

@@ -5,10 +5,10 @@ from InquirerPy.base.control import Choice
 import asyncclick as click
 
 from config import MOD_SCAN_DIRS
-from mod_manager import mods_handler
+from mod_manager import metadata
 
-from mod_manager import modlist_handler
-from mod_manager.modlist_handler import get_tag_info
+from mod_manager import instance
+from mod_manager.instance import get_tag_info
 from cli.interface import select_or_create
 
 @click.group("tags")
@@ -18,7 +18,7 @@ def tags():
 @tags.command("info")
 @click.argument("tag_name",nargs = -1)
 async def show_tag_info(tag_name):
-    mods_info = await mods_handler.get_mods_info(MOD_SCAN_DIRS)
+    mods_info = await metadata.get_mods_info(MOD_SCAN_DIRS)
     
     if tag_name:
         tag_name = tag_name[0]
@@ -36,13 +36,13 @@ async def show_tag_info(tag_name):
 
 @tags.command("validate")
 async def validate_tags():
-    mods_data = await mods_handler.get_mods_info(MOD_SCAN_DIRS)
-    await modlist_handler.validate_tags(mods_data)
+    mods_data = await metadata.get_mods_info(MOD_SCAN_DIRS)
+    await instance.validate_tags(mods_data)
 
 @tags.command("edit")
 @click.argument("tag_name",nargs = -1)
 async def edit_tag(tag_name):
-    mods_info = await mods_handler.get_mods_info(MOD_SCAN_DIRS)
+    mods_info = await metadata.get_mods_info(MOD_SCAN_DIRS)
     
     if tag_name:
         tag_name = tag_name[0]

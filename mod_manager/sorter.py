@@ -2,7 +2,7 @@ from pathlib import Path
 import logging
 from itertools import chain
 
-from mod_manager.mod_handler import Mod
+from mod_manager.mod import Mod
 
 from config import TIER_THREE_MODS, DLC_NAMES
 

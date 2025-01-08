@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 
 
-from mod_manager.mod_handler import Mod
+from mod_manager.mod import Mod
 
 def compile_rentry(mods: dict[Path, Mod]):
     report = (

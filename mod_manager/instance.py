@@ -5,8 +5,8 @@ import logging, os
 
 from pathlib import Path
 from typing import Iterable
-from mod_manager import mods_handler
-from mod_manager.mod_handler import Mod
+from mod_manager import metadata
+from mod_manager.mod import Mod
 
 from colorama import Style,Fore,Back
 

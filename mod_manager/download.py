@@ -10,7 +10,7 @@ import logging
 
 from colorama import Fore, Back, Style
 
-from mod_manager.mod_handler import Mod
+from mod_manager.mod import Mod
 from mod_manager import steam_handler
 from config import WORKSHOP_PATH, STEAMCMD_PATH, GITHUB_MODS_PATH
 
@@ -25,25 +25,51 @@ todds_command = [
     "-t"
 ]
 
+# async def command_run(cmd: list[str]) -> int | None:
+#     logger = logging.getLogger()
+#     proc = await asyncio.create_subprocess_exec(
+#         *cmd,
+#         stdout=asyncio.subprocess.PIPE,
+#         stderr=asyncio.subprocess.PIPE)
+
+#     stdout, stderr = await proc.communicate()
+
+#     logger.debug(f'[{cmd!r} exited with {proc.returncode}]')
+#     if stdout:
+#         logger.debug(f'[stdout]\n{stdout.decode()}')
+#     if stderr:
+#         logger.debug(f'[stderr]\n{stderr.decode()}')
+
+#     return proc.returncode
+
 async def command_run(cmd: list[str]) -> int | None:
+    # Magic chatgpt code
     logger = logging.getLogger()
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE)
 
-    stdout, stderr = await proc.communicate()
+    async def log_stream(stream, log_level):
+        while True:
+            line = await stream.readline()
+            if not line:  # End of stream
+                break
+            logger.log(log_level, line.decode().strip())
 
-    logger.debug(f'[{cmd!r} exited with {proc.returncode}]')
-    if stdout:
-        logger.debug(f'[stdout]\n{stdout.decode()}')
-    if stderr:
-        logger.debug(f'[stderr]\n{stderr.decode()}')
+    stdout_task = asyncio.create_task(log_stream(proc.stdout, logging.INFO))
+    stderr_task = asyncio.create_task(log_stream(proc.stderr, logging.ERROR))
 
-    return proc.returncode
+    await asyncio.gather(stdout_task, stderr_task)
+    returncode = await proc.wait()
 
+    # logger.debug(f'[{cmd!r} exited with {returncode}]')
+    return returncode
 
 async def steam_download_workshop_ids(workshop_ids: Iterable[str]) -> list[Path]:
+    if not workshop_ids:
+        return []
+
     command = [STEAMCMD_PATH,
             "+logon", "anonymous",
         ]
