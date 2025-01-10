@@ -164,7 +164,7 @@ async def update_mods(mods: list[Mod]):
     await process_downloads(steam_download_workshop_ids(to_download_steam))
 
     for mod in itertools.chain(mods):
-        mod.update_persistence("download_time",time.time())
+        mod.download_time = time.time()
 
 async def update(mods):
     logger = logging.getLogger()
@@ -182,21 +182,21 @@ async def update(mods):
     to_download = []
 
     for steam_id, mod in steam_mods.items():
-        if "download_time" in mod.persistent:
+        if mod.download_time:
             if str(steam_id) not in steam_info:
                 continue
             else:
                 mod_steam_info = steam_info[str(steam_id)]
         
             if "time_updated" not in mod_steam_info:
-                logger.warning(f"Mod {mod.name} ({steam_id}) does not have update time")
+                logger.warning(f"Mod {mod.gname} ({steam_id}) does not have update time")
                 continue
         
-            if float(mod_steam_info["time_updated"]) > float(mod.persistent["download_time"]):
+            if float(mod_steam_info["time_updated"]) > mod.download_time:
                 to_download.append(mod)
         else:
             to_download.append(mod)
     
-    logger.info("\n".join(f"{Fore.BLUE}{mod.name}{Style.RESET_ALL}" for mod in to_download))
+    logger.info("\n".join(f"{Fore.BLUE}{mod.gname}{Style.RESET_ALL}" for mod in to_download))
     await update_mods(to_download)
     

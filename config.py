@@ -27,5 +27,5 @@ DLC_NAMES = ["ludeon.rimworld.ideology","ludeon.rimworld.anomaly","ludeon.rimwor
 FRAMEWORK_MODS = [
     "ludeon.rimworld", "brrainz.harmony", "oskarpotocki.vanillafactionsexpanded.core",
     "unlimitedhugs.hugslib", "zetrith.prepatcher", "adaptive.storage.framework",
-    "imranfish.xmlextensions", "nightmare.core"
-    ]
+    "imranfish.xmlextensions", "nightmare.core", "uuugggg.tdfindlib"
+]

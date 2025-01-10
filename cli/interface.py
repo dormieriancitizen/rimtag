@@ -5,6 +5,8 @@ from pathlib import Path
 from InquirerPy import inquirer
 import asyncclick as click
 
+from mod_manager.mod import Mod
+
 async def select_or_create(scan_path: Path,query: str) -> str | None:
     paths = [f.name for f in scan_path.iterdir() if f.is_file()]
 
@@ -54,3 +56,13 @@ async def prompt_instance_name() -> str | None:
             else:
                 return None
     return instance_name
+
+async def select_and_add_mod_to_tag(mod: Mod):
+    print(f"Select tag for {mod.gname}")
+    tag_name = await select_or_create(
+        Path("cache/tags/"),"tag"
+    )
+
+    if tag_name:
+        with open(Path("cache/tags") / tag_name, "a") as tag_file:
+            tag_file.write("\n"+mod.path.absolute().as_posix())

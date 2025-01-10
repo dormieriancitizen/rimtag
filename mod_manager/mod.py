@@ -5,14 +5,18 @@ from typing import Any, Union
 
 from aiofile import async_open
 
+import datetime
+
+from colorama import Fore, Style
 import time, xmltodict, logging
 from xml.parsers.expat import ExpatError
+
+from config import STEAMCMD_PATH
 
 class Mod:
     def __init__(self,
                  path: Path,
                  source: str,
-                 steam_id: str,
                  pid: str,
                  name: str,
                  deps: list[str],
@@ -52,7 +56,7 @@ class Mod:
         self.persistent: dict = json.loads(persistent_info.decode("utf-8"))
 
         if "download_time" not in self.persistent:
-            self.update_persistence("download_time",time.time())
+            self.update_persistence("download_time",0)
 
     def jsonable(self) -> dict[str,Any]:
         cached = {}
@@ -79,6 +83,28 @@ class Mod:
         cached["filesize"] = self.filesize
 
         return cached
+
+    @property
+    def ident(self):
+        # No colors builin
+        date = datetime.datetime.fromtimestamp(self.download_time).strftime("%m/%d/%Y")
+        return self.name+" "+date
+
+    @property
+    def gname(self):
+        date = datetime.datetime.fromtimestamp(self.download_time).strftime("%m/%d/%Y")
+        return f"{Fore.BLUE}{self.name} {Style.DIM}{date}{Style.RESET_ALL}"
+
+    @property
+    def download_time(self) -> float:
+        if "download_time" in self.persistent:
+            return float(self.persistent["download_time"])
+        else:
+            return 0
+    
+    @download_time.setter
+    def download_time(self,value: float):
+        self.update_persistence("download_time",value)
 
     def update_persistence(self,key,value):
         self.persistent[key] = value
@@ -167,15 +193,6 @@ async def generate_mod_from_scratch(path: Path, mod_persistent_info: bytes, dbm_
     name = about["name"] if "name" in about else pid
     author = about["author"] if "author" in about else ""
 
-    if source == "STEAM":
-        steam_id_path = (about_path.parent / "PublishedFileId.txt")
-        if steam_id_path.exists():
-            steam_id = steam_id_path.read_text()
-        else:
-            steam_id = path.name
-    else:
-        steam_id = "0"
-
     if "url" in about:
         download_link = about["url"]
     elif source=="STEAM":
@@ -211,7 +228,6 @@ async def generate_mod_from_scratch(path: Path, mod_persistent_info: bytes, dbm_
     return Mod(
         path=path,
         source=source,
-        steam_id=steam_id,
         pid=pid,
         name=name,
         deps=deps,
@@ -252,7 +268,6 @@ async def generate_mod_from_cache(cached: Any, dbm_db, mod_persistent_info: byte
     return Mod(
         path=path,
         source=source,
-        steam_id=steam_id,
         pid=pid,
         name=name,
         deps=deps,
@@ -269,12 +284,10 @@ async def generate_mod_from_cache(cached: Any, dbm_db, mod_persistent_info: byte
     )
 
 def is_steam_mod(path: Path) -> bool:
+    if STEAMCMD_PATH not in path.parents:
+        return False
     # fix later
     if not path.name.isnumeric():
         return False
-    if not len(path.name) >= 9:
-        return False
-    if not len(path.name) <= 10:
-        return False
-    else:
-        return True
+
+    return True

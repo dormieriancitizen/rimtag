@@ -18,7 +18,7 @@ def modsort(mods: dict[Path,Mod]) -> list[str]:
     for path, mod in mods.copy().items():
         for dependency in mod.deps:
             if dependency not in deps:
-                logger.warning(f"Mod {mod.name} missing dependency {dependency}, removing from list")
+                logger.warning(f"Mod {mod.gname} missing dependency {dependency}, removing from list")
                 del deps[mod.pid]
                 del mods[path]
 

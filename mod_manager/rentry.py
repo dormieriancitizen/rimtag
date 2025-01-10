@@ -3,7 +3,6 @@ from typing import Any
 from urllib.parse import urlparse
 from pathlib import Path
 
-
 from mod_manager.mod import Mod
 
 def compile_rentry(mods: dict[Path, Mod]):

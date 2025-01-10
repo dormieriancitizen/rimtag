@@ -5,10 +5,9 @@ from InquirerPy.base.control import Choice
 import asyncclick as click
 
 from config import MOD_SCAN_DIRS
-from mod_manager import metadata
+from mod_manager import metadata, tag
 
-from mod_manager import instance
-from mod_manager.instance import get_tag_info
+from mod_manager.tag import get_tag_info
 from cli.interface import select_or_create
 
 @click.group("tags")
@@ -37,7 +36,7 @@ async def show_tag_info(tag_name):
 @tags.command("validate")
 async def validate_tags():
     mods_data = await metadata.get_mods_info(MOD_SCAN_DIRS)
-    await instance.validate_tags(mods_data)
+    await tag.validate_tags(mods_data)
 
 @tags.command("edit")
 @click.argument("tag_name",nargs = -1)
@@ -57,7 +56,7 @@ async def edit_tag(tag_name):
     choices = [
         Choice(
             mod.path.absolute().as_posix(),
-            name=mod.name,
+            name=mod.ident,
             enabled=(path in tag_info),
         ) for path, mod in mods_info.items()
     ]
