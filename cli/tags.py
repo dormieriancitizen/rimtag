@@ -4,7 +4,7 @@ from InquirerPy import inquirer
 from InquirerPy.base.control import Choice
 import asyncclick as click
 
-from config import MOD_SCAN_DIRS
+from config import CONFIG_PATH, MOD_SCAN_DIRS
 from mod_manager import metadata, tag
 
 from mod_manager.tag import get_tag_info
@@ -22,7 +22,7 @@ async def show_tag_info(tag_name):
     if tag_name:
         tag_name = tag_name[0]
     else:
-        tag_name = (await select_or_create(Path("cache/tags/"),"tag"))
+        tag_name = (await select_or_create((CONFIG_PATH / "tags/"),"tag"))
 
     if not tag_name:
         return
@@ -46,7 +46,7 @@ async def edit_tag(tag_name):
     if tag_name:
         tag_name = tag_name[0]
     else:
-        tag_name = (await select_or_create(Path("cache/tags/"),"tag"))
+        tag_name = (await select_or_create((CONFIG_PATH / "tags/"),"tag"))
 
     if not tag_name:
         return
@@ -80,5 +80,5 @@ async def edit_tag(tag_name):
 
     print(f"Tag {tag_name} is {len(mods)} mods long")
 
-    with open(Path("cache/tags/") / tag_name, "w") as tag_file:
+    with open((CONFIG_PATH / "tags/") / tag_name, "w") as tag_file:
         tag_file.write("\n".join(mods)) # type: ignore

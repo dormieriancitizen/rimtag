@@ -4,6 +4,7 @@ from typing import Any
 
 import asyncio, os
 
+from config import CONFIG_PATH
 import mod_manager.steam_handler as steam_handler
 from mod_manager.cache import update_json_cache
 
@@ -34,7 +35,7 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
     logger = logging.getLogger()
     start_time = time.time()
 
-    cache_file = Path("cache/mods_info.json")
+    cache_file = (CONFIG_PATH / "mods_info.json")
 
     if cache_file.exists():
         try:
@@ -72,7 +73,7 @@ async def get_mods_info_from_paths(paths: list[Path]) -> dict[Path, Mod]:
     mods_tasks = []
 
     # Not closing bc I'll bneed this later
-    db =  dbm.open(Path("cache/persistent.dbm"),"c")
+    db =  dbm.open((CONFIG_PATH / "persistent.dbm"),"c")
 
     for path in paths:
         abs_path = path.absolute().as_posix()

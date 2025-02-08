@@ -5,6 +5,7 @@ from pathlib import Path
 from InquirerPy import inquirer
 import asyncclick as click
 
+from config import CONFIG_PATH
 from mod_manager.mod import Mod
 
 async def select_or_create(scan_path: Path,query: str) -> str | None:
@@ -34,7 +35,7 @@ async def prompt_instance_name() -> str | None:
     logger = logging.getLogger()
     instance_name = ""
 
-    cache_path = Path("cache/instance_name")
+    cache_path = (CONFIG_PATH / "instance_name")
     
     instance_paths = [f for f in os.listdir("cache/instances") if os.path.isfile(os.path.join("cache/instances", f))]
 
@@ -49,7 +50,7 @@ async def prompt_instance_name() -> str | None:
     
     if not instance_name:
         with open(f"cached_instance_name","w") as instance_cache:
-            instance_name = await select_or_create(Path("cache/instances"),"instance")
+            instance_name = await select_or_create((CONFIG_PATH / "instances"),"instance")
 
             if instance_name:
                 instance_cache.write(instance_name)
@@ -60,9 +61,9 @@ async def prompt_instance_name() -> str | None:
 async def select_and_add_mod_to_tag(mod: Mod):
     print(f"Select tag for {mod.gname}")
     tag_name = await select_or_create(
-        Path("cache/tags/"),"tag"
+        (CONFIG_PATH / "tags/"),"tag"
     )
 
     if tag_name:
-        with open(Path("cache/tags") / tag_name, "a") as tag_file:
+        with open((CONFIG_PATH / "tags") / tag_name, "a") as tag_file:
             tag_file.write("\n"+mod.path.absolute().as_posix())

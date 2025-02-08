@@ -3,6 +3,7 @@ import logging, aiohttp
 
 from pathlib import Path
 
+from config import CONFIG_PATH
 from mod_manager.cache import update_json_cache
 
 async def fetch_from_steam(steam_ids: list[str]) -> dict[str, dict[str, Any]]:
@@ -31,7 +32,7 @@ async def fetch_from_steam(steam_ids: list[str]) -> dict[str, dict[str, Any]]:
 
     steamd = {file_detail["publishedfileid"]: file_detail for file_detail in published_file_details}
 
-    cache_path = Path("cache/steam_workshop_info.json")
+    cache_path = (CONFIG_PATH / "steam_workshop_info.json")
     await update_json_cache(cache_path,steamd)
 
     logger.info(f"Fetched steam data")

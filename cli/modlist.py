@@ -17,9 +17,9 @@ async def modlist():
     pass
 
 @modlist.command("list")
-@click.argument("modlist_name",default=None)
+@click.argument("modlist_name",default=False)
 async def make_modlist(modlist_name):
-    if not modlist_name:
+    if modlist_name is False:
         modlist_name = await interface.prompt_instance_name()
 
     if not modlist_name:
@@ -38,9 +38,9 @@ async def make_modlist(modlist_name):
     instance.link_mods(list(mod_data.values())) # t
 
 @modlist.command("rentry")
-@click.argument("modlist_name",default=None)
+@click.argument("modlist_name",default=False)
 async def upload_rentry(modlist_name):
-    if not modlist_name:
+    if modlist_name is False:
         modlist_name = await interface.prompt_instance_name()
     if not modlist_name:
         return

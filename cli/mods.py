@@ -1,4 +1,6 @@
+import logging
 import time
+from xxlimited import new
 import asyncclick as click
 import asyncio
 from pathlib import Path
@@ -66,3 +68,23 @@ async def cli_get_mods_by_dep():
     for path, mod in mod_data.items():
         if target_pid in mod.deps:
             print(f"{mod.gname}")
+
+@cli_mods.command("prio")
+async def cli_set_mod_prio():
+    logger = logging.getLogger()
+    mod_data = await metadata.get_mods_info(MOD_SCAN_DIRS)
+
+    mod_path: Path = (await inquirer.fuzzy( # type: ignore
+                message=f"Choose parent mod",
+                choices=[Choice(path,m.ident) for path, m in mod_data.items()],
+                pointer=">",
+            ).execute_async())
+
+    mod = mod_data[mod_path]
+
+    logger.info(f"Current prio: {mod.sort_priority}")
+    new_prio = int(click.prompt("Enter new priority"))
+
+    mod.sort_priority = new_prio
+
+    logger.info(f"Updated priority of {mod.gname} to {Style.BRIGHT}{new_prio}{Style.RESET_ALL}")

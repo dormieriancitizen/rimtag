@@ -1,5 +1,7 @@
 from pathlib import Path
 
+CONFIG_PATH = Path("cache")
+
 # Path to rimworld config
 RIMWORLD_CONFIG_PATH = Path("/home/dormierian/.config/unity3d/Ludeon Studios/RimWorld by Ludeon Studios/")
 RIMWORLD_GAME_PATH = Path("/home/dormierian/Games/rimworld")

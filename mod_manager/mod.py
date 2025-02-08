@@ -11,7 +11,7 @@ from colorama import Fore, Style
 import time, xmltodict, logging
 from xml.parsers.expat import ExpatError
 
-from config import STEAMCMD_PATH
+from config import WORKSHOP_PATH
 
 class Mod:
     def __init__(self,
@@ -100,11 +100,20 @@ class Mod:
         if "download_time" in self.persistent:
             return float(self.persistent["download_time"])
         else:
-            return 0
-    
+            return 0    
     @download_time.setter
     def download_time(self,value: float):
         self.update_persistence("download_time",value)
+
+    @property
+    def sort_priority(self) -> int:
+        if "sort_priority" in self.persistent:
+            return int(self.persistent["sort_priority"])
+        else:
+            return 0    
+    @sort_priority.setter
+    def sort_priority(self,value: int):
+        self.update_persistence("sort_priority",value)
 
     def update_persistence(self,key,value):
         self.persistent[key] = value
@@ -284,7 +293,7 @@ async def generate_mod_from_cache(cached: Any, dbm_db, mod_persistent_info: byte
     )
 
 def is_steam_mod(path: Path) -> bool:
-    if STEAMCMD_PATH not in path.parents:
+    if WORKSHOP_PATH.resolve() not in path.resolve().parents:
         return False
     # fix later
     if not path.name.isnumeric():

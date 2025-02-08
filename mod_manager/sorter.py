@@ -56,7 +56,7 @@ def modsort(mods: dict[Path,Mod]) -> list[str]:
         if pid in deps:
             deps[pid].extend(load_normal_mods)
 
-    order = sort_mod_list(deps)
+    order = sort_mod_list({mod.pid: mod for mod in mods.values()},deps)
 
     # pids_by_path = {mods[path].pid: path for path in mods}
 
@@ -104,7 +104,7 @@ def find_circular_dependencies(nodes):
         for cycle in cycles:
             logger.error(f"Circular dependency detected: {' -> '.join(cycle)}")
 
-def sort_mod_list(nodes: dict[str, list[str]]) -> list[str]:
+def sort_mod_list(mods: dict[str, Mod], nodes: dict[str, list[str]]) -> list[str]:
     """
     Topological sort for a network of nodes
 
@@ -133,7 +133,10 @@ def sort_mod_list(nodes: dict[str, list[str]]) -> list[str]:
     # Continue until all nodes have been dealt with
     while len(queue) > 0:
         # Sort the queue alphabetically by real name
-        queue = sorted(queue,key=lambda x: x,reverse=True)
+        queue = sorted(queue,key=lambda pid: (
+            -mods[pid].sort_priority,
+            mods[pid].name,
+        ),reverse=True)
 
         # node of current iteration is the first one from the queue
         curr: str = queue.pop(0)

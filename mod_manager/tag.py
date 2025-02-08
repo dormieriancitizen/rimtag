@@ -10,7 +10,7 @@ from colorama import Fore, Back, Style
 
 import xmltodict
 
-from config import FRAMEWORK_MODS
+from config import CONFIG_PATH, FRAMEWORK_MODS
 from mod_manager.mod import Mod
 
 async def validate_tags(mod_data: dict[Path,Mod]) -> None:
@@ -28,9 +28,9 @@ async def validate_tags(mod_data: dict[Path,Mod]) -> None:
 
     logger = logging.getLogger()
 
-    replacements_folder = Path("cache/databases/UseThisInstead/Replacements/")
+    replacements_folder = (CONFIG_PATH / "databases/UseThisInstead/Replacements/")
 
-    for tag_file in [f for f in Path("cache/tags").iterdir() if f.is_file()]:
+    for tag_file in [f for f in (CONFIG_PATH / "tags").iterdir() if f.is_file()]:
         logger.info(f"Validating tag {Fore.RED}{tag_file.name}{Style.RESET_ALL}")
 
         tag_paths = [Path(posix) for posix in tag_file.read_text().split("\n")]
